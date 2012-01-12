@@ -2,15 +2,15 @@
 # ----------------------------------------------------------------------------
 # "THE BEER-WARE LICENSE" (Revision 42):
 # lofi schrieb diese Datei. Solange Sie diesen Vermerk nicht entfernen,
-# können Sie mit der Datei machen, was Sie möchten. 
-# Wenn wir uns eines Tages treffen und Sie denken, die Datei ist es wert, 
+# können Sie mit der Datei machen, was Sie möchten.
+# Wenn wir uns eines Tages treffen und Sie denken, die Datei ist es wert,
 # können Sie mir dafür ein Bier bzw. eine Mate ausgeben.
 # ----------------------------------------------------------------------------
 #
 # Version: 0.1.1
 #
 # lofi 23.02.2011: Initial Script
-# lofi 24.02.2011: Removed all comments to make the code 
+# lofi 24.02.2011: Removed all comments to make the code
 #                  unreadable for any one else :)
 # lofi 03.03.2011: t2s functions added
 #
@@ -153,8 +153,8 @@ sub _main_menu {
                            'more mate',
                            'more beer',
                            'more tschunk',
-                           'insert coins', 
-                           'stats', 
+                           'insert coins',
+                           'stats',
                            'loscher stuff',
                            'change passwd',
                            'Quit'], 'matomat>';
@@ -186,7 +186,7 @@ sub _read_credit {
 			print ~~$font->figify(-A=>"$credit credits");
 			print "\n";
 			if ($credit =~ m/^-/) {
-				print ~~$font->figify(-A=>"TIME2PAY!"); 
+				print ~~$font->figify(-A=>"TIME2PAY!");
 				if ($credit <= -15) {
 					system("$echobin $t2s_pay_minus15_pre $festivalbin");
 					my $count = 1;
@@ -201,7 +201,7 @@ sub _read_credit {
                                 }
 			}
 			print "\n\n\n";
-		} 
+		}
 	}
 	close DB;
 }
@@ -249,7 +249,7 @@ sub _add_mate {
 			print "Tschunk: $tschunktmp\n\n\n";
 			my $update = $login.":".$credit.":".$beertmp.":".$matetmp.":".$tschunktmp."\n";;
 			print DB $update;
-	
+
 			&_mate_t2s;
 			#system("$echobin $t2s_moremate $festivalbin");
 
@@ -286,8 +286,8 @@ sub _add_beer {
             			print "Tschunk: $tschunktmp\n\n\n";
                         my $update = $login.":".$credit.":".$beertmp.":".$matetmp.":".$tschunktmp."\n";
                         print DB $update;
-			
-			&_beer_t2s;	
+
+			&_beer_t2s;
 			#system("$echobin $t2s_morebeer $festivalbin");
 
 			open STAT, ">>", $statsfile or die $!;
@@ -394,7 +394,7 @@ sub _loscher_menu {
                         }
                 }
         }
-        close CRED;	
+        close CRED;
 }
 
 sub _add_user {
@@ -444,7 +444,7 @@ sub _add_user {
         my $update = $auser.":".$startcredit.":0:0\n";;
         print DB $update;
         close DB;
-	
+
 	$auser = "";
 	$apass = "";
 	$hashpass = "";
@@ -577,7 +577,7 @@ sub _banner {
   \\/_/  \\/_/   \\/_/\\/_/     \\/_/   \\/_____/   \\/_/  \\/_/   \\/_/\\/_/     \\/_/
 
 ============================================================================
-                                                
+
 EOF
 }
 
@@ -626,7 +626,7 @@ sub _login_banner {
                             +77I                                  =777=
                                   7777I+                   ?7777+
                                           ++?IIII7III??+=
-                                                                                               
+
 EOF
 }
 
@@ -634,11 +634,11 @@ sub _loscher_banner {
 	print $clear_string;
 	print STDOUT << "EOF";
 ============================================================================
- __         ______     ______     ______     __  __     ______     ______    
-/\\ \\       /\\  __ \\   /\\  ___\\   /\\  ___\\   /\\ \\_\\ \\   /\\  ___\\   /\\  == \\   
-\\ \\ \\____  \\ \\ \\/\\ \\  \\ \\___  \\  \\ \\ \\____  \\ \\  __ \\  \\ \\  __\\   \\ \\  __<   
- \\ \\_____\\  \\ \\_____\\  \\/\\_____\\  \\ \\_____\\  \\ \\_\\ \\_\\  \\ \\_____\\  \\ \\_\\ \\_\\ 
-  \\/_____/   \\/_____/   \\/_____/   \\/_____/   \\/_/\\/_/   \\/_____/   \\/_/ /_/ 
+ __         ______     ______     ______     __  __     ______     ______
+/\\ \\       /\\  __ \\   /\\  ___\\   /\\  ___\\   /\\ \\_\\ \\   /\\  ___\\   /\\  == \\
+\\ \\ \\____  \\ \\ \\/\\ \\  \\ \\___  \\  \\ \\ \\____  \\ \\  __ \\  \\ \\  __\\   \\ \\  __<
+ \\ \\_____\\  \\ \\_____\\  \\/\\_____\\  \\ \\_____\\  \\ \\_\\ \\_\\  \\ \\_____\\  \\ \\_\\ \\_\\
+  \\/_____/   \\/_____/   \\/_____/   \\/_____/   \\/_/\\/_/   \\/_____/   \\/_/ /_/
 
 ============================================================================
 
