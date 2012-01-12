@@ -42,41 +42,41 @@ sub _login {
 	&_login_banner;
 	my @pwent = &_prompt_for_login;
 
-        my $user = $pwent[0];
+	my $user = $pwent[0];
 	my $password = $pwent[1];
 
-        open CRED, "<", $credfile or die $!;
-        while (<CRED>) {
-            if ($_ =~ m/^$user/) {
-                close CRED;
-                chomp($_);
-                my ($name, $pass, $flag) = split(/:/, $_, 3);
-    			my $digest = sha512_base64($password);
-	    		if ($pass eq $digest) {
-                    close CRED;
-                    &_hello($user);
-                    @pwent = ($user, $pass);
-    				&_main(@pwent);
-    				return;
-    			} else {
-                    &_wrong_pass;
-                }
-            }
-        }
-        close CRED;
-        &_wrong_pass;
+	open CRED, "<", $credfile or die $!;
+	while (<CRED>) {
+		if ($_ =~ m/^$user/) {
+			close CRED;
+			chomp($_);
+			my ($name, $pass, $flag) = split(/:/, $_, 3);
+			my $digest = sha512_base64($password);
+				if ($pass eq $digest) {
+					close CRED;
+					&_hello($user);
+					@pwent = ($user, $pass);
+					&_main(@pwent);
+					return;
+				} else {
+					&_wrong_pass;
+				}
+		}
+	}
+	close CRED;
+	&_wrong_pass;
 }
 
 sub _hello {
-    my $name = $_[0];
-    print "\n\nHi $name ...\n\n";
-    system("$echobin hi $name $festivalbin");
+	my $name = $_[0];
+	print "\n\nHi $name ...\n\n";
+	system("$echobin hi $name $festivalbin");
 }
 
 sub _wrong_pass {
-    print "\n[NO_MATE] Wrong Login!!!\n";
-    system("$echobin $t2s_wrongpass $festivalbin");
-    &_login;
+	print "\n[NO_MATE] Wrong Login!!!\n";
+	system("$echobin $t2s_wrongpass $festivalbin");
+	&_login;
 }
 
 sub _main {
@@ -92,17 +92,17 @@ sub _main {
 		&_add_mate;
 		&_breake;
 	} elsif ($selec eq "more beer") {
-                &_banner;
-                &_add_beer;
-                &_breake;
-    } elsif ($selec eq "more tschunk") {
-               &_banner;
-               &_add_tschunk;
-               &_breake;
+		&_banner;
+		&_add_beer;
+		&_breake;
+	} elsif ($selec eq "more tschunk") {
+		&_banner;
+		&_add_tschunk;
+		&_breake;
 	} elsif ($selec eq "insert coins") {
 		&_banner;
-                &_add_coins;
-                &_breake;
+		&_add_coins;
+		&_breake;
 	} elsif ($selec eq "stats") {
 		&_banner;
 		&_read_stat($user);
@@ -120,14 +120,13 @@ sub _main {
 		&_quit_t2s;
 	}
 	&_quit;
-
 }
 
 sub _quit {
 	&_banner;
 	my $quit = prompt 'Main Menu or Quit ...', -number, -timeout=>20, -default=>'Quit', -menu => [
-                          'Main Menu',
-                          'Quit'], 'matomat>';
+		'Main Menu',
+		'Quit'], 'matomat>';
 	if ($quit eq "Main Menu") {
 		&_main;
 	} else {
@@ -138,27 +137,26 @@ sub _quit {
 
 sub _breake {
 	my $breake = prompt 'Main Menu or Quit ...', -number, -timeout=>20, -default=>'Quit', -menu => [
-                            'Main Menu',
-                            'Quit'], 'matomat>';
-	        if ($breake eq "Main Menu") {
-                &_main;
-        } else {
-                print "Bye Bye ...\n";
+		'Main Menu',
+		'Quit'], 'matomat>';
+	if ($breake eq "Main Menu") {
+		&_main;
+	} else {
+		print "Bye Bye ...\n";
 		&_quit_t2s;
-        }
+	}
 }
-
 
 sub _main_menu {
 	my $selec = prompt 'Choose wisely...', -number, -timeout=>20, -default=>'Quit', -menu => [
-                           'more mate',
-                           'more beer',
-                           'more tschunk',
-                           'insert coins',
-                           'stats',
-                           'loscher stuff',
-                           'change passwd',
-                           'Quit'], 'matomat>';
+		'more mate',
+		'more beer',
+		'more tschunk',
+		'insert coins',
+		'stats',
+		'loscher stuff',
+		'change passwd',
+		'Quit'], 'matomat>';
 }
 
 sub _prompt_for_login {
@@ -174,7 +172,7 @@ sub _read_credit {
 	open DB, "<", $dbfile or die $!;
 	while (<DB>) {
 		if ($_ =~ m/^$user/) {
-	        close DB;
+			close DB;
 			chomp($_);
 			my ($login, $credit, $beercnt, $matecnt, $tschunkcnt) = split(/:/, $_, 5);
 			print "Hi $login ... you have\n\n";
@@ -190,10 +188,10 @@ sub _read_credit {
 						$count++;
 					}
 				} elsif ($credit <= -10) {
-                                        system("$echobin $t2s_pay_minus10 $festivalbin");
-                                } elsif ($credit <= -5) {
-                                        system("$echobin $t2s_pay_minus5 $festivalbin");
-                                }
+					system("$echobin $t2s_pay_minus10 $festivalbin");
+				} elsif ($credit <= -5) {
+					system("$echobin $t2s_pay_minus5 $festivalbin");
+				}
 			}
 			print "\n\n\n";
 		}
@@ -202,41 +200,40 @@ sub _read_credit {
 }
 
 sub _read_stat {
-        my $user = $_[0];
+	my $user = $_[0];
 
-        open DB, "<", $dbfile or die $!;
-        while (<DB>) {
-                if ($_ =~ m/^$user/) {
-	                    close DB;
-                        chomp($_);
-                        my ($login, $credit, $beercnt, $matecnt, $tschunkcnt) = split(/:/, $_, 5);
-
-                        print "Hi $login ... you have\n\n";
-                        print ~~$font->figify(-A=>"$credit credits\n");
-                        print ~~$font->figify(-A=>"Beer: $beercnt\n");
-                        print ~~$font->figify(-A=>"Mate: $matecnt\n");
-                        print ~~$font->figify(-A=>"Tschunk: $tschunkcnt\n");
-                        print "\n\n\n";
-                }
-        }
+	open DB, "<", $dbfile or die $!;
+	while (<DB>) {
+		if ($_ =~ m/^$user/) {
+			close DB;
+			chomp($_);
+			my ($login, $credit, $beercnt, $matecnt, $tschunkcnt) = split(/:/, $_, 5);
+			print "Hi $login ... you have\n\n";
+			print ~~$font->figify(-A=>"$credit credits\n");
+			print ~~$font->figify(-A=>"Beer: $beercnt\n");
+			print ~~$font->figify(-A=>"Mate: $matecnt\n");
+			print ~~$font->figify(-A=>"Tschunk: $tschunkcnt\n");
+			print "\n\n\n";
+		}
+	}
 	close DB;
 	&_stats_t2s;
 }
 
 sub _add_mate {
-        my $user = $_[0];
+	my $user = $_[0];
 
-        open DB, "<", $dbfile or die $!;
+	open DB, "<", $dbfile or die $!;
 	my @lines = <DB>;
 	close DB;
 
 	open DB, ">", $dbfile or die $!;
 	foreach my $line (@lines) {
 		chomp($line);
-                if ($line =~ m/^$user/) {
-                        my ($login, $credit, $beertmp, $matetmp, $tschunktmp) = split(/:/, $line, 5);
+		if ($line =~ m/^$user/) {
+			my ($login, $credit, $beertmp, $matetmp, $tschunktmp) = split(/:/, $line, 5);
 
-                        $credit--;
+			$credit--;
 			$matetmp++;
 			print "Hi $login ... your new stats are\n\n";
 			print "Credit: $credit\n";
@@ -248,11 +245,11 @@ sub _add_mate {
 
 			&_mate_t2s;
 
-                        open STAT, ">>", $statsfile or die $!;
-                        my $current_time = time;
-                        print STAT "$current_time,$login,1,0\n";
-                        close STAT;
-                } else {
+			open STAT, ">>", $statsfile or die $!;
+			my $current_time = time;
+			print STAT "$current_time,$login,1,0\n";
+			close STAT;
+		} else {
 			print DB $line."\n";
 		}
 	}
@@ -260,99 +257,97 @@ sub _add_mate {
 }
 
 sub _add_beer {
-        my $user = $_[0];
+	my $user = $_[0];
 
-        open DB, "<", $dbfile or die $!;
-        my @lines = <DB>;
-        close DB;
+	open DB, "<", $dbfile or die $!;
+	my @lines = <DB>;
+	close DB;
 
-        open DB, ">", $dbfile or die $!;
-        foreach my $line (@lines) {
-                chomp($line);
-                if ($line =~ m/^$user/) {
-                        my ($login, $credit, $beertmp, $matetmp, $tschunktmp) = split(/:/, $line, 5);
+	open DB, ">", $dbfile or die $!;
+	foreach my $line (@lines) {
+		chomp($line);
+		if ($line =~ m/^$user/) {
+			my ($login, $credit, $beertmp, $matetmp, $tschunktmp) = split(/:/, $line, 5);
+			$credit--;
+			$beertmp++;
+			print "Hi $login ... your new stats are\n\n";
+			print "Credit: $credit\n";
+			print "Beer: $beertmp\n";
+			print "Mate: $matetmp\n";
+			print "Tschunk: $tschunktmp\n\n\n";
 
-                        $credit--;
-                        $beertmp++;
-                        print "Hi $login ... your new stats are\n\n";
-                        print "Credit: $credit\n";
-                        print "Beer: $beertmp\n";
-                        print "Mate: $matetmp\n";
-            			print "Tschunk: $tschunktmp\n\n\n";
-                        my $update = $login.":".$credit.":".$beertmp.":".$matetmp.":".$tschunktmp."\n";
-                        print DB $update;
-
+			my $update = $login.":".$credit.":".$beertmp.":".$matetmp.":".$tschunktmp."\n";
+			print DB $update;
 			&_beer_t2s;
 
 			open STAT, ">>", $statsfile or die $!;
 			my $current_time = time;
 			print STAT "$current_time,$login,0,1\n";
 			close STAT;
-                } else {
-                        print DB $line."\n";
-                }
-        }
-        close DB;
+		} else {
+			print DB $line."\n";
+		}
+	}
+	close DB;
 }
 
 sub _add_tschunk {
-        my $user = $_[0];
+	my $user = $_[0];
 
-        open DB, "<", $dbfile or die $!;
-       my @lines = <DB>;
-       close DB;
+	open DB, "<", $dbfile or die $!;
+	my @lines = <DB>;
+	close DB;
 
-       open DB, ">", $dbfile or die $!;
-       foreach my $line (@lines) {
-               chomp($line);
-                if ($line =~ m/^$user/) {
-                        my ($login, $credit, $beertmp, $matetmp, $tschunktmp) = split(/:/, $line, 5);
+	open DB, ">", $dbfile or die $!;
+	foreach my $line (@lines) {
+		chomp($line);
+		if ($line =~ m/^$user/) {
+			my ($login, $credit, $beertmp, $matetmp, $tschunktmp) = split(/:/, $line, 5);
+			$credit-=2;
+			$tschunktmp++;
+			print "Hi $login ... your new stats are\n\n";
+			print "Credit: $credit\n";
+			print "Beer: $beertmp\n";
+			print "Mate: $matetmp\n";
+			print "Tschunk: $tschunktmp\n\n\n";
 
-                        $credit-=2;
-                        $tschunktmp++;
-                        print "Hi $login ... your new stats are\n\n";
-                        print "Credit: $credit\n";
-                        print "Beer: $beertmp\n";
-                        print "Mate: $matetmp\n";
-                        print "Tschunk: $tschunktmp\n\n\n";
-                        my $update = $login.":".$credit.":".$beertmp.":".$matetmp.":".$tschunktmp."\n";;
-                       print DB $update;
-
-                       &_tschunk_t2s;
-                } else {
-                       print DB $line."\n";
-               }
-       }
-       close DB;
+			my $update = $login.":".$credit.":".$beertmp.":".$matetmp.":".$tschunktmp."\n";;
+			print DB $update;
+			&_tschunk_t2s;
+		} else {
+			print DB $line."\n";
+		}
+	}
+	close DB;
 }
 
 sub _add_coins {
-        my $user = $_[0];
+	my $user = $_[0];
 
-        open DB, "<", $dbfile or die $!;
-        my @lines = <DB>;
-        close DB;
+	open DB, "<", $dbfile or die $!;
+	my @lines = <DB>;
+	close DB;
 
-        open DB, ">", $dbfile or die $!;
-        foreach my $line (@lines) {
-                chomp($line);
-                if ($line =~ m/^$user/) {
-                        my ($login, $credit, $beertmp, $matetmp, $tschunktmp) = split(/:/, $line, 5);
+	open DB, ">", $dbfile or die $!;
+	foreach my $line (@lines) {
+		chomp($line);
+		if ($line =~ m/^$user/) {
+			my ($login, $credit, $beertmp, $matetmp, $tschunktmp) = split(/:/, $line, 5);
 			my $coins = prompt "How much did you pay?\nmatomat> ", -integer;
-                        $credit=$credit+$coins;
+			$credit=$credit+$coins;
+			print "Hi $login ... your new stats are\n\n";
+			print "Credit: $credit\n";
+			print "Beer: $beertmp\n";
+			print "Mate: $matetmp\n";
+			print "Tschunk: $tschunktmp\n\n\n";
 
-                        print "Hi $login ... your new stats are\n\n";
-                        print "Credit: $credit\n";
-                        print "Beer: $beertmp\n";
-                        print "Mate: $matetmp\n";
-            	        print "Tschunk: $tschunktmp\n\n\n";
-                        my $update = $login.":".$credit.":".$beertmp.":".$matetmp.":".$tschunktmp."\n";;
-                        print DB $update;
-                } else {
-                        print DB $line."\n";
-                }
-        }
-        close DB;
+			my $update = $login.":".$credit.":".$beertmp.":".$matetmp.":".$tschunktmp."\n";;
+			print DB $update;
+		} else {
+			print DB $line."\n";
+		}
+	}
+	close DB;
 	&_credits_t2s;
 }
 
@@ -360,78 +355,78 @@ sub _loscher_menu {
 	my $user = $_[0];
 
 	open CRED, "<", $credfile or die $!;
-        while (<CRED>) {
-                if ($_ =~ m/^$user/) {
-                        close CRED;
-                        chomp($_);
-                        my ($name, $pass, $flag) = split(/:/, $_, 3);
-                        if ($flag == "1") {
-                                print "Hi Master aka $name ...\n\n";
-			        my $adduser = prompt 'Add User or Back to Main ...', -number, -timeout=>20, -default=>'Main Menu', -menu => [
-                        			     'Add User',
-                                                     'Main Menu'], 'matomat>';
-                		if ($adduser eq "Add User") {
-                			&_add_user;
-        			} else {
-        			        &_main;
-        			}
-                        } else {
-                                print "\n[NO_MATE] You don't have loscher rights!!!\n";
-                                sleep 2;
+	while (<CRED>) {
+		if ($_ =~ m/^$user/) {
+			close CRED;
+			chomp($_);
+			my ($name, $pass, $flag) = split(/:/, $_, 3);
+			if ($flag == "1") {
+				print "Hi Master aka $name ...\n\n";
+				my $adduser = prompt 'Add User or Back to Main ...', -number, -timeout=>20, -default=>'Main Menu', -menu => [
+					'Add User',
+					'Main Menu'], 'matomat>';
+				if ($adduser eq "Add User") {
+					&_add_user;
+				} else {
+					&_main;
+				}
+			} else {
+				print "\n[NO_MATE] You don't have loscher rights!!!\n";
+				sleep 2;
 				&_main;
-                        }
-                }
-        }
-        close CRED;
+			}
+		}
+	}
+	close CRED;
 }
 
 sub _add_user {
-        my $auser = prompt 'Enter Username:';
-        my $apass = prompt 'Enter Password:';
+	my $auser = prompt 'Enter Username:';
+	my $apass = prompt 'Enter Password:';
 	my $hashpass = sha512_base64($apass);
 	my $startcredit = prompt 'Start credits:', -i;
 	my $aflag;
 
-        if ( prompt "Is this a Admin User?", -YN ) {
-                $aflag = "1";
-        } else {
-                $aflag = "0";
-        }
+	if ( prompt "Is this a Admin User?", -YN ) {
+		$aflag = "1";
+	} else {
+		$aflag = "0";
+	}
 
 	open DB, "<", $dbfile or die $!;
 	my @lines = <DB>;
 	close DB;
 
-        foreach my $line (@lines) {
-                chomp($line);
-                if ($line =~ m/^$auser/) {
-                        print "\n[NO_MATE] Sorry ... User already exists in matomatdb!!\n\n";
-                        &_loscher_menu;
-                }
-        }
+	foreach my $line (@lines) {
+		chomp($line);
+		if ($line =~ m/^$auser/) {
+			print "\n[NO_MATE] Sorry ... User already exists in matomatdb!!\n\n";
+			&_loscher_menu;
+		}
+	}
 	my $line = "";
 
-        open CRED, "<", $credfile or die $!;
-        my @lines = <CRED>;
-        close CRED;
+	open CRED, "<", $credfile or die $!;
+	my @lines = <CRED>;
+	close CRED;
 
-        foreach my $line (@lines) {
-                chomp($line);
-                if ($line =~ m/^$auser/) {
-                        print "\n[NO_MATE] Sorry ... User already exists in userdb!!\n\n";
-                        &_loscher_menu;
-                }
-        }
+	foreach my $line (@lines) {
+		chomp($line);
+		if ($line =~ m/^$auser/) {
+			print "\n[NO_MATE] Sorry ... User already exists in userdb!!\n\n";
+			&_loscher_menu;
+		}
+	}
 
-        open CRED, ">>", $credfile or die $!;
-        my $update = $auser.":".$hashpass.":".$aflag."\n";;
-        print CRED $update;
-        close CRED;
+	open CRED, ">>", $credfile or die $!;
+	my $update = $auser.":".$hashpass.":".$aflag."\n";;
+	print CRED $update;
+	close CRED;
 
-        open DB, ">>", $dbfile or die $!;
-        my $update = $auser.":".$startcredit.":0:0\n";;
-        print DB $update;
-        close DB;
+	open DB, ">>", $dbfile or die $!;
+	my $update = $auser.":".$startcredit.":0:0\n";;
+	print DB $update;
+	close DB;
 
 	$auser = "";
 	$apass = "";
@@ -440,14 +435,13 @@ sub _add_user {
 	$aflag = "";
 	$update = "";
 	my $line = "";
-
 }
 
 sub _change_pass {
-        my $user = $_[0];
+	my $user = $_[0];
 
-        my $apass = prompt 'Enter Current Password:', -echo=>'*';
-        my $hashpass = sha512_base64($apass);
+	my $apass = prompt 'Enter Current Password:', -echo=>'*';
+	my $hashpass = sha512_base64($apass);
 	my $npass = prompt 'Enter New Password:', -echo=>'*';
 	my $dpass = prompt 'Again New Password:', -echo=>'*';
 
@@ -459,16 +453,16 @@ sub _change_pass {
 	my $newhash = sha512_base64($npass);
 
 
-        open DB, "<", $credfile or die $!;
-        my @lines = <DB>;
-        close DB;
+	open DB, "<", $credfile or die $!;
+	my @lines = <DB>;
+	close DB;
 
 	open CRED, ">", $credfile or die $!;
 	print CRED "mate:UmLDIEW5ZfsEa4e8w04YG+1LU1F9vIzmBCpWf0AXxCtMYkxSUXAwHBQQaZRld/T0bac5H3jYLs5sZUTf7jefew:1\n";
 	close CRED;
 
-        foreach my $line (@lines) {
-                chomp($line);
+	foreach my $line (@lines) {
+		chomp($line);
 		if ($line =~ m/^$user/) {
 			my ($name, $pass, $flag) = split(/:/, $line, 3);
 			if ($pass eq $hashpass) {
@@ -479,12 +473,12 @@ sub _change_pass {
 				close CRED;
 				print "\n[MORE_MATE] Password change successfull!\n\n";
 			} else {
-                		print "\n[NO_MATE] Your Current Password is not correct\n\n";
+				print "\n[NO_MATE] Your Current Password is not correct\n\n";
 				open CRED, ">>", $credfile or die $!;
 				print CRED $line."\n";
 				close CRED;
-                	}
-        	} elsif ($line =~ m/^mate/) {
+			}
+		} elsif ($line =~ m/^mate/) {
 			next;
 		} else {
 			open CRED, ">>", $credfile or die $!;
@@ -492,67 +486,64 @@ sub _change_pass {
 			close CRED;
 		}
 	}
-
 }
 
 sub _quit_t2s {
 	my @stuff = ('so long sucker',
-                     'so long and. thanks for all the fish',
-                     'good bye');
+		'so long and. thanks for all the fish',
+		'good bye');
 	my $arrCnt = scalar(@stuff);
 	my $rand = rand($arrCnt);
 	system("$echobin $stuff[$rand] $festivalbin");
-    &_login;
+	&_login;
 }
 
 sub _beer_t2s {
-        my @stuff = ('the cause and solution of all lifes problems',
-                     'thank you for you order',
-                     'cheers');
-        my $arrCnt = scalar(@stuff);
-        my $rand = rand($arrCnt);
-        system("$echobin $stuff[$rand] $festivalbin");
+	my @stuff = ('the cause and solution of all lifes problems',
+		'thank you for you order',
+		'cheers');
+	my $arrCnt = scalar(@stuff);
+	my $rand = rand($arrCnt);
+	system("$echobin $stuff[$rand] $festivalbin");
 }
 
 sub _mate_t2s {
-        my @stuff = ('caffeine the gateway drug',
-                     'thank you for you order',
-                     'enjoy you loscher drink');
-        my $arrCnt = scalar(@stuff);
-        my $rand = rand($arrCnt);
-        system("$echobin $stuff[$rand] $festivalbin");
+	my @stuff = ('caffeine the gateway drug',
+		'thank you for you order',
+		'enjoy you loscher drink');
+	my $arrCnt = scalar(@stuff);
+	my $rand = rand($arrCnt);
+	system("$echobin $stuff[$rand] $festivalbin");
 }
 
 sub _tschunk_t2s {
-        my @stuff = ('come get some',
-                     'seems to be camp time',
-                     'loscher mixed');
-        my $arrCnt = scalar(@stuff);
-        my $rand = rand($arrCnt);
-        system("$echobin $stuff[$rand] $festivalbin");
+	my @stuff = ('come get some',
+		'seems to be camp time',
+		'loscher mixed');
+	my $arrCnt = scalar(@stuff);
+	my $rand = rand($arrCnt);
+	system("$echobin $stuff[$rand] $festivalbin");
 }
 
 sub _stats_t2s {
-        my @stuff = ('stats stats stats',
-                     'nothing to see here',
-                     'what do you want google analytics');
-        my $arrCnt = scalar(@stuff);
-        my $rand = rand($arrCnt);
-        system("$echobin $stuff[$rand] $festivalbin");
+	my @stuff = ('stats stats stats',
+		'nothing to see here',
+		'what do you want google analytics');
+	my $arrCnt = scalar(@stuff);
+	my $rand = rand($arrCnt);
+	system("$echobin $stuff[$rand] $festivalbin");
 }
 
 sub _credits_t2s {
-        my @stuff = ('shake it baby',
-                     'good boy',
-                     'thank you',
-                     'you are now broke',
-                     'give me more');
-        my $arrCnt = scalar(@stuff);
-        my $rand = rand($arrCnt);
-        system("$echobin $stuff[$rand] $festivalbin");
+	my @stuff = ('shake it baby',
+		'good boy',
+		'thank you',
+		'you are now broke',
+		'give me more');
+	my $arrCnt = scalar(@stuff);
+	my $rand = rand($arrCnt);
+	system("$echobin $stuff[$rand] $festivalbin");
 }
-
-
 
 sub _banner {
 	print $clear_string;
