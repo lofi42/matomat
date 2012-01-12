@@ -445,17 +445,17 @@ sub _change_pass {
 	my $apass = "";
 	my $hashpass = "";
 
-	print "Changing password for user $user\n\n";
+	print "Changing password for user: $user\n\n";
 
 	if ($admin eq "0") {
-		$apass = prompt 'Enter Current Password:', -echo=>'*';
+		$apass = prompt 'Enter current password:', -echo=>'*';
 		$hashpass = sha512_base64($apass);
 	}
-	my $npass = prompt 'Enter New Password:', -echo=>'*';
-	my $dpass = prompt 'Again New Password:', -echo=>'*';
+	my $npass = prompt 'Enter new password:', -echo=>'*';
+	my $dpass = prompt 'Again new password:', -echo=>'*';
 
 	if ($npass ne $dpass) {
-		print "\n[NO_MATE] Password are not the same LEARN TYPING!\n\n";
+		print "\n[NO_MATE] Passwords differ... LEARN TO TYPE!\n\n";
 		sleep 3;
 		&_change_pass($user, $admin);
 	}
@@ -474,9 +474,9 @@ sub _change_pass {
 				my $newhash = sha512_base64($npass);
 				my $update = $name.":".$newhash.":".$flag."\n";
 				print CRED $update;
-				print "\n[MORE_MATE] Password change successfull!\n\n";
+				print "\n[MORE_MATE] Password change successful!\n\n";
 			} else {
-				print "\n[NO_MATE] Your Current Password is not correct\n\n";
+				print "\n[NO_MATE] Your current password is not correct\n\n";
 				print CRED $line."\n";
 			}
 		} else {
