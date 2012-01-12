@@ -114,6 +114,10 @@ sub _main {
                 &_banner;
                 &_add_beer;
                 &_breake;
+    } elsif ($selec eq "more tschunk") {
+               &_banner;
+               &_add_tschunk;
+               &_breake;
 	} elsif ($selec eq "insert coins") {
 		&_banner;
                 &_add_coins;
@@ -171,6 +175,7 @@ sub _main_menu {
 	my $selec = prompt 'Choose wisely...', -number, -timeout=>20, -default=>'Quit', -menu => [
                            'more mate',
                            'more beer',
+                           'more tschunk',
                            'insert coins', 
                            'stats', 
                            'loscher stuff',
@@ -199,7 +204,7 @@ sub _read_credit {
 	while (<DB>) {
 		if ($_ =~ m/^$user/) {
 			chomp($_);
-			my ($login, $credit, $beercnt, $matecnt) = split(/:/, $_, 4);
+			my ($login, $credit, $beercnt, $matecnt, $tschunkcnt) = split(/:/, $_, 5);
 			print "Hi $login ... you have\n\n";
 			print ~~$font->figify(-A=>"$credit credits");
 			print "\n";
@@ -231,12 +236,13 @@ sub _read_stat {
         while (<DB>) {
                 if ($_ =~ m/^$user/) {
                         chomp($_);
-                        my ($login, $credit, $beercnt, $matecnt) = split(/:/, $_, 4);
+                        my ($login, $credit, $beercnt, $matecnt, $tschunkcnt) = split(/:/, $_, 5);
 
                         print "Hi $login ... you have\n\n";
                         print ~~$font->figify(-A=>"$credit credits\n");
-			print ~~$font->figify(-A=>"Beer: $beercnt\n");
-			print ~~$font->figify(-A=>"Mate: $matecnt\n");
+                        print ~~$font->figify(-A=>"Beer: $beercnt\n");
+                        print ~~$font->figify(-A=>"Mate: $matecnt\n");
+                        print ~~$font->figify(-A=>"Tschunk: $tschunkcnt\n");
                         print "\n\n\n";
                 }
         }
@@ -255,15 +261,16 @@ sub _add_mate {
 	foreach my $line (@lines) {
 		chomp($line);
                 if ($line =~ m/^$user/) {
-                        my ($login, $credit, $beertmp, $matetmp) = split(/:/, $line, 4);
+                        my ($login, $credit, $beertmp, $matetmp, $tschunktmp) = split(/:/, $line, 5);
 
                         $credit--;
 			$matetmp++;
 			print "Hi $login ... your new stats are\n\n";
 			print "Credit: $credit\n";
 			print "Beer: $beertmp\n";
-			print "Mate: $matetmp\n\n\n";
-			my $update = $login.":".$credit.":".$beertmp.":".$matetmp."\n";;
+			print "Mate: $matetmp\n";
+			print "Tschunk: $tschunktmp\n\n\n";
+			my $update = $login.":".$credit.":".$beertmp.":".$matetmp.":".$tschunktmp."\n";;
 			print DB $update;
 	
 			&_mate_t2s;
@@ -291,15 +298,16 @@ sub _add_beer {
         foreach my $line (@lines) {
                 chomp($line);
                 if ($line =~ m/^$user/) {
-                        my ($login, $credit, $beertmp, $matetmp) = split(/:/, $line, 4);
+                        my ($login, $credit, $beertmp, $matetmp, $tschunktmp) = split(/:/, $line, 5);
 
                         $credit--;
                         $beertmp++;
                         print "Hi $login ... your new stats are\n\n";
                         print "Credit: $credit\n";
                         print "Beer: $beertmp\n";
-                        print "Mate: $matetmp\n\n\n\n";
-                        my $update = $login.":".$credit.":".$beertmp.":".$matetmp."\n";;
+                        print "Mate: $matetmp\n";
+            			print "Tschunk: $tschunktmp\n\n\n";
+                        my $update = $login.":".$credit.":".$beertmp.":".$matetmp.":".$tschunktmp."\n";
                         print DB $update;
 			
 			&_beer_t2s;	
@@ -316,6 +324,43 @@ sub _add_beer {
         close DB;
 }
 
+sub _add_tschunk {
+        my $user = $_[0];
+
+        open DB, "<", $dbfile or die $!;
+       my @lines = <DB>;
+       close DB;
+
+       open DB, ">", $dbfile or die $!;
+       foreach my $line (@lines) {
+               chomp($line);
+                if ($line =~ m/^$user/) {
+                        my ($login, $credit, $beertmp, $matetmp, $tschunktmp) = split(/:/, $line, 5);
+
+                        $credit-=2;
+                        $tschunktmp++;
+                        print "Hi $login ... your new stats are\n\n";
+                        print "Credit: $credit\n";
+                        print "Beer: $beertmp\n";
+                        print "Mate: $matetmp\n";
+                        print "Tschunk: $tschunktmp\n\n\n";
+                        my $update = $login.":".$credit.":".$beertmp.":".$matetmp.":".$tschunktmp."\n";;
+                       print DB $update;
+
+                       &_tschunk_t2s;
+                       #system("$echobin $t2s_moremate $festivalbin");
+
+                       # open STAT, ">>", $statsfile or die $!;
+                       # my $current_time = time;
+                       # print STAT "$current_time,$login,1,0\n";
+                       # close STAT;
+                } else {
+                       print DB $line."\n";
+               }
+       }
+       close DB;
+}
+
 sub _add_coins {
         my $user = $_[0];
 
@@ -327,15 +372,16 @@ sub _add_coins {
         foreach my $line (@lines) {
                 chomp($line);
                 if ($line =~ m/^$user/) {
-                        my ($login, $credit, $beertmp, $matetmp) = split(/:/, $line, 4);
+                        my ($login, $credit, $beertmp, $matetmp, $tschunktmp) = split(/:/, $line, 5);
 			my $coins = prompt "How much did you pay?\nmatomat> ", -integer;
                         $credit=$credit+$coins;
 
                         print "Hi $login ... your new stats are\n\n";
                         print "Credit: $credit\n";
                         print "Beer: $beertmp\n";
-                        print "Mate: $matetmp\n\n\n\n";
-                        my $update = $login.":".$credit.":".$beertmp.":".$matetmp."\n";;
+                        print "Mate: $matetmp\n";
+            	        print "Tschunk: $tschunktmp\n\n\n";
+                        my $update = $login.":".$credit.":".$beertmp.":".$matetmp.":".$tschunktmp."\n";;
                         print DB $update;
                 } else {
                         print DB $line."\n";
@@ -506,6 +552,15 @@ sub _mate_t2s {
         my @stuff = ('caffeine the gateway drug',
                      'thank you for you order',
                      'enjoy you loscher drink');
+        my $arrCnt = scalar(@stuff);
+        my $rand = rand($arrCnt);
+        system("$echobin $stuff[$rand] $festivalbin");
+}
+
+sub _tschunk_t2s {
+        my @stuff = ('come get some',
+                     'seems to be camp time',
+                     'loscher mixed');
         my $arrCnt = scalar(@stuff);
         my $rand = rand($arrCnt);
         system("$echobin $stuff[$rand] $festivalbin");
