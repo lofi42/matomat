@@ -38,30 +38,7 @@ my $credfile = "/var/matomat/user.db";
 my $statsfile = "/var/matomat/stats.db";
 my $font = Text::FIGlet->new(-m=>-1,-f=>"/var/matomat/standard.flf");
 
-my $pid = fork();
-
-if ($pid) {
-	push(@childs, $pid);
-} elsif ($pid == 0) {
-	&_login;
-	exit 0;
-} else {
-	die "[ERROR] Fork geht nicht \n ";
-}
-
-foreach (@childs) {
-	my $tmp = waitpid($_, 0);
-	my $pid = fork();
-	if ($pid) {
-        	push(@childs, $pid);
-	} elsif ($pid == 0) {
-        	&_login;
-        	exit 0;
-	} else {
-        	die "[ERROR] Fork geht nicht \n ";
-	}
-}
-
+&_login;
 
 sub _login {
 	&_login_banner;
@@ -72,30 +49,35 @@ sub _login {
 
         open CRED, "<", $credfile or die $!;
         while (<CRED>) {
-                if ($_ =~ m/^$user/) {
-                        chomp($_);
-                        my ($name, $pass, $flag) = split(/:/, $_, 3);
-			my $digest = sha512_base64($password);
-			if ($pass eq $digest) {
-                        	print "\n\nHi $name ...\n\n";
-				system("$echobin hi $name $festivalbin");
-				#sleep 2;	
-				&_main(@pwent);
-				return;
-			} else {
-				print "\n[NO_MATE] Wrong login!!!\n";
-				system("$echobin $t2s_wrongpass $festivalbin");
-				exit 0;
-			}
-                } else {
-			print "..";
-		}
-		
+            if ($_ =~ m/^$user/) {
+                chomp($_);
+                my ($name, $pass, $flag) = split(/:/, $_, 3);
+    			my $digest = sha512_base64($password);
+	    		if ($pass eq $digest) {
+                    close CRED;
+                    &_hello($user);
+                    @pwent = ($user, $pass);
+    				&_main(@pwent);
+    				return;
+    			} else {
+                    &_wrong_pass;
+                }
+            }
         }
         close CRED;
-	print "\n[NO_MATE] Wrong Login!!!\n";
-	system("$echobin $t2s_wrongpass $festivalbin");
+        &_wrong_pass;
+}
 
+sub _hello {
+    my $name = $_[0];
+    print "\n\nHi $name ...\n\n";
+    system("$echobin hi $name $festivalbin");
+}
+
+sub _wrong_pass {
+    print "\n[NO_MATE] Wrong Login!!!\n";
+    system("$echobin $t2s_wrongpass $festivalbin");
+    &_login;
 }
 
 sub _main {
@@ -137,7 +119,6 @@ sub _main {
 	} elsif ($selec eq "Quit") {
 		print "Bye Bye ...\n";
 		&_quit_t2s;
-		exit 0;
 	}
 	&_quit;
 
@@ -153,7 +134,6 @@ sub _quit {
 	} else {
 		print "Bye Bye ...\n";
 		&_quit_t2s;
-		exit 0;
 	}
 }
 
@@ -166,7 +146,6 @@ sub _breake {
         } else {
                 print "Bye Bye ...\n";
 		&_quit_t2s;
-                exit 0;
         }
 }
 
@@ -537,6 +516,7 @@ sub _quit_t2s {
 	my $arrCnt = scalar(@stuff);
 	my $rand = rand($arrCnt);
 	system("$echobin $stuff[$rand] $festivalbin");
+    &_login;
 }
 
 sub _beer_t2s {
