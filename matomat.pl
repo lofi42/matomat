@@ -48,6 +48,7 @@ sub _login {
         open CRED, "<", $credfile or die $!;
         while (<CRED>) {
             if ($_ =~ m/^$user/) {
+                close CRED;
                 chomp($_);
                 my ($name, $pass, $flag) = split(/:/, $_, 3);
     			my $digest = sha512_base64($password);
@@ -173,6 +174,7 @@ sub _read_credit {
 	open DB, "<", $dbfile or die $!;
 	while (<DB>) {
 		if ($_ =~ m/^$user/) {
+	        close DB;
 			chomp($_);
 			my ($login, $credit, $beercnt, $matecnt, $tschunkcnt) = split(/:/, $_, 5);
 			print "Hi $login ... you have\n\n";
@@ -205,6 +207,7 @@ sub _read_stat {
         open DB, "<", $dbfile or die $!;
         while (<DB>) {
                 if ($_ =~ m/^$user/) {
+	                    close DB;
                         chomp($_);
                         my ($login, $credit, $beercnt, $matecnt, $tschunkcnt) = split(/:/, $_, 5);
 
@@ -359,6 +362,7 @@ sub _loscher_menu {
 	open CRED, "<", $credfile or die $!;
         while (<CRED>) {
                 if ($_ =~ m/^$user/) {
+                        close CRED;
                         chomp($_);
                         my ($name, $pass, $flag) = split(/:/, $_, 3);
                         if ($flag == "1") {
