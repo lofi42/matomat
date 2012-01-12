@@ -18,13 +18,11 @@
 
 use strict;
 use IO::Prompter;
-#use Unix::Login;
 use Text::FIGlet;
 use Digest::SHA qw(sha512 sha512_base64 sha512_hex);
 
 $ENV{'PATH'} = '/bin:/usr/bin';
 
-my @childs;
 my $t2s_wrongpass = "i am sorry dave. i am afraid i cant do that";
 my $t2s_pay_minus5 = "you better pay soon";
 my $t2s_pay_minus10 = "time to pay bitch";
