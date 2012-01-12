@@ -164,13 +164,6 @@ sub _prompt_for_login {
 	my $user = prompt 'User:' ;
 	my $passwd = prompt 'Password:', -echo=>'*';
 	my @pwent = ($user, $passwd);
-	#my @pwent = login(login => "User: ",
-        #          password => "Pass: ",
-        #          failmesg => "loel... try again\n",
-        #          attempts => 300);
-                  #clearenv => 1);
-                  #cdhome => 1,
-                  #execshell => 1);
 	return @pwent;
 }
 
@@ -251,7 +244,6 @@ sub _add_mate {
 			print DB $update;
 
 			&_mate_t2s;
-			#system("$echobin $t2s_moremate $festivalbin");
 
                         open STAT, ">>", $statsfile or die $!;
                         my $current_time = time;
@@ -288,7 +280,6 @@ sub _add_beer {
                         print DB $update;
 
 			&_beer_t2s;
-			#system("$echobin $t2s_morebeer $festivalbin");
 
 			open STAT, ">>", $statsfile or die $!;
 			my $current_time = time;
@@ -325,12 +316,6 @@ sub _add_tschunk {
                        print DB $update;
 
                        &_tschunk_t2s;
-                       #system("$echobin $t2s_moremate $festivalbin");
-
-                       # open STAT, ">>", $statsfile or die $!;
-                       # my $current_time = time;
-                       # print STAT "$current_time,$login,1,0\n";
-                       # close STAT;
                 } else {
                        print DB $line."\n";
                }
@@ -366,7 +351,6 @@ sub _add_coins {
         }
         close DB;
 	&_credits_t2s;
-	#system("$echobin $t2s_credit $festivalbin");
 }
 
 sub _loscher_menu {
