@@ -113,7 +113,7 @@ sub _main {
 		&_breake;
 	} elsif ($selec eq "change passwd") {
 		&_banner;
-		&_change_pass;
+		&_change_pass($user, "0");
 		&_breake;
 	} elsif ($selec eq "Quit") {
 		print "Bye Bye ...\n";
@@ -362,11 +362,14 @@ sub _loscher_menu {
 			my ($name, $pass, $flag) = split(/:/, $_, 3);
 			if ($flag == "1") {
 				print "Hi Master aka $name ...\n\n";
-				my $adduser = prompt 'Add User or Back to Main ...', -number, -timeout=>20, -default=>'Main Menu', -menu => [
-					'Add User',
+				my $choice = prompt 'Add User or Back to Main ...', -number, -timeout=>20, -default=>'Main Menu', -menu => [
+					'Add User', "Change Password",
 					'Main Menu'], 'matomat>';
-				if ($adduser eq "Add User") {
+				if ($choice eq "Add User") {
 					&_add_user;
+				} elsif ($choice eq "Change Password") {
+					$user = prompt "Change password of user: ";
+					&_change_pass($user, "1");
 				} else {
 					&_main;
 				}
@@ -438,54 +441,49 @@ sub _add_user {
 }
 
 sub _change_pass {
-	my $user = $_[0];
+	my ($user, $admin) = @_;
+	my $apass = "";
+	my $hashpass = "";
 
-	my $apass = prompt 'Enter Current Password:', -echo=>'*';
-	my $hashpass = sha512_base64($apass);
+	print "Changing password for user $user\n\n";
+
+	if ($admin eq "0") {
+		$apass = prompt 'Enter Current Password:', -echo=>'*';
+		$hashpass = sha512_base64($apass);
+	}
 	my $npass = prompt 'Enter New Password:', -echo=>'*';
 	my $dpass = prompt 'Again New Password:', -echo=>'*';
 
 	if ($npass ne $dpass) {
 		print "\n[NO_MATE] Password are not the same LEARN TYPING!\n\n";
 		sleep 3;
-		&_change_pass;
+		&_change_pass($user, $admin);
 	}
 	my $newhash = sha512_base64($npass);
-
 
 	open DB, "<", $credfile or die $!;
 	my @lines = <DB>;
 	close DB;
 
 	open CRED, ">", $credfile or die $!;
-	print CRED "mate:UmLDIEW5ZfsEa4e8w04YG+1LU1F9vIzmBCpWf0AXxCtMYkxSUXAwHBQQaZRld/T0bac5H3jYLs5sZUTf7jefew:1\n";
-	close CRED;
-
 	foreach my $line (@lines) {
 		chomp($line);
 		if ($line =~ m/^$user/) {
 			my ($name, $pass, $flag) = split(/:/, $line, 3);
-			if ($pass eq $hashpass) {
+			if ($admin eq "1" or $pass eq $hashpass) {
 				my $newhash = sha512_base64($npass);
 				my $update = $name.":".$newhash.":".$flag."\n";
-				open CRED, ">>", $credfile or die $!;
 				print CRED $update;
-				close CRED;
 				print "\n[MORE_MATE] Password change successfull!\n\n";
 			} else {
 				print "\n[NO_MATE] Your Current Password is not correct\n\n";
-				open CRED, ">>", $credfile or die $!;
 				print CRED $line."\n";
-				close CRED;
 			}
-		} elsif ($line =~ m/^mate/) {
-			next;
 		} else {
-			open CRED, ">>", $credfile or die $!;
 			print CRED $line."\n";
-			close CRED;
 		}
 	}
+	close CRED;
 }
 
 sub _quit_t2s {
