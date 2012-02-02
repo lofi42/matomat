@@ -385,7 +385,7 @@ sub _loscher_menu {
 
 sub _add_user {
 	my $auser = prompt 'Enter Username:';
-	my $apass = prompt 'Enter Password:';
+	my $apass = prompt 'Enter Password:', -echo=>'*';
 	my $hashpass = sha512_base64($apass);
 	my $startcredit = prompt 'Start credits:', -i;
 	my $aflag;
