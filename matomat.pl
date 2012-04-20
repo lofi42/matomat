@@ -7,12 +7,13 @@
 # können Sie mir dafür ein Bier bzw. eine Mate ausgeben.
 # ----------------------------------------------------------------------------
 #
-# Version: 0.1.1
+# Version: 0.1.2
 #
 # lofi 23.02.2011: Initial Script
 # lofi 24.02.2011: Removed all comments to make the code
 #                  unreadable for any one else :)
 # lofi 03.03.2011: t2s functions added
+# lofi 19.04.2012: Mollar Rate integration
 #
 ##############################################################
 
@@ -20,6 +21,7 @@ use strict;
 use IO::Prompter;
 use Text::FIGlet;
 use Digest::SHA qw(sha512 sha512_base64 sha512_hex);
+use Term::ReadKey;
 
 $ENV{'PATH'} = '/bin:/usr/bin';
 
@@ -35,11 +37,17 @@ my $dbfile = "/var/matomat/matomat.db";
 my $credfile = "/var/matomat/user.db";
 my $statsfile = "/var/matomat/stats.db";
 my $font = Text::FIGlet->new(-m=>-1,-f=>"/var/matomat/standard.flf");
+my $timeout = 20;
+my $rtrate = 1;
 
 &_login;
 
 sub _login {
 	&_login_banner;
+	if ($rtrate == 1) { 
+		my $rate = &_current_rate;
+		print ~~$font->figify(-A=>"Preis: $rate");
+	}
 	my @pwent = &_prompt_for_login;
 
 	my $user = $pwent[0];
@@ -124,7 +132,7 @@ sub _main {
 
 sub _quit {
 	&_banner;
-	my $quit = prompt 'Main Menu or Quit ...', -number, -timeout=>20, -default=>'Quit', -menu => [
+	my $quit = prompt 'Main Menu or Quit ...', -number, -timeout=>$timeout, -default=>'Quit', -menu => [
 		'Main Menu',
 		'Quit'], 'matomat>';
 	if ($quit eq "Main Menu") {
@@ -136,7 +144,7 @@ sub _quit {
 }
 
 sub _breake {
-	my $breake = prompt 'Main Menu or Quit ...', -number, -timeout=>20, -default=>'Quit', -menu => [
+	my $breake = prompt 'Main Menu or Quit ...', -number, -timeout=>$timeout, -default=>'Main Menu', -menu => [
 		'Main Menu',
 		'Quit'], 'matomat>';
 	if ($breake eq "Main Menu") {
@@ -148,7 +156,7 @@ sub _breake {
 }
 
 sub _main_menu {
-	my $selec = prompt 'Choose wisely...', -number, -timeout=>20, -default=>'Quit', -menu => [
+	my $selec = prompt 'Choose wisely...', -number, -timeout=>$timeout, -default=>'Quit', -menu => [
 		'more mate',
 		'more beer',
 		'more tschunk',
@@ -176,20 +184,22 @@ sub _read_credit {
 			chomp($_);
 			my ($login, $credit, $beercnt, $matecnt, $tschunkcnt) = split(/:/, $_, 5);
 			print "Hi $login ... you have\n\n";
+			$credit=$credit/100;
+			$credit = sprintf("%.2f", $credit);
 			print ~~$font->figify(-A=>"$credit credits");
 			print "\n";
 			if ($credit =~ m/^-/) {
 				print ~~$font->figify(-A=>"TIME2PAY!");
-				if ($credit <= -15) {
+				if ($credit <= -1500) {
 					system("$echobin $t2s_pay_minus15_pre $festivalbin");
 					my $count = 1;
 					while ($count <= 5) {
 						system("$echobin $t2s_pay_minus15 $festivalbin");
 						$count++;
 					}
-				} elsif ($credit <= -10) {
+				} elsif ($credit <= -1000) {
 					system("$echobin $t2s_pay_minus10 $festivalbin");
-				} elsif ($credit <= -5) {
+				} elsif ($credit <= -500) {
 					system("$echobin $t2s_pay_minus5 $festivalbin");
 				}
 			}
@@ -208,6 +218,8 @@ sub _read_stat {
 			close DB;
 			chomp($_);
 			my ($login, $credit, $beercnt, $matecnt, $tschunkcnt) = split(/:/, $_, 5);
+			$credit=$credit/100;
+			$credit = sprintf("%.2f", $credit); 
 			print "Hi $login ... you have\n\n";
 			print ~~$font->figify(-A=>"$credit credits\n");
 			print ~~$font->figify(-A=>"Beer: $beercnt\n");
@@ -227,16 +239,20 @@ sub _add_mate {
 	my @lines = <DB>;
 	close DB;
 
+	my $rate = &_current_rate;
+	$rate=$rate*100;
+
 	open DB, ">", $dbfile or die $!;
 	foreach my $line (@lines) {
 		chomp($line);
 		if ($line =~ m/^$user/) {
 			my ($login, $credit, $beertmp, $matetmp, $tschunktmp) = split(/:/, $line, 5);
 
-			$credit--;
+			$credit=$credit-$rate;
 			$matetmp++;
+			my $ocredit=$credit/100;
 			print "Hi $login ... your new stats are\n\n";
-			print "Credit: $credit\n";
+			print "Credit: $ocredit\n";
 			print "Beer: $beertmp\n";
 			print "Mate: $matetmp\n";
 			print "Tschunk: $tschunktmp\n\n\n";
@@ -263,15 +279,20 @@ sub _add_beer {
 	my @lines = <DB>;
 	close DB;
 
+        my $rate = &_current_rate;
+        $rate=$rate*100;
+
 	open DB, ">", $dbfile or die $!;
 	foreach my $line (@lines) {
 		chomp($line);
 		if ($line =~ m/^$user/) {
 			my ($login, $credit, $beertmp, $matetmp, $tschunktmp) = split(/:/, $line, 5);
-			$credit--;
+
+			$credit=$credit-$rate;
 			$beertmp++;
+			my $ocredit=$credit/100;
 			print "Hi $login ... your new stats are\n\n";
-			print "Credit: $credit\n";
+			print "Credit: $ocredit\n";
 			print "Beer: $beertmp\n";
 			print "Mate: $matetmp\n";
 			print "Tschunk: $tschunktmp\n\n\n";
@@ -303,7 +324,7 @@ sub _add_tschunk {
 		chomp($line);
 		if ($line =~ m/^$user/) {
 			my ($login, $credit, $beertmp, $matetmp, $tschunktmp) = split(/:/, $line, 5);
-			$credit-=2;
+			$credit-=200;
 			$tschunktmp++;
 			print "Hi $login ... your new stats are\n\n";
 			print "Credit: $credit\n";
@@ -328,12 +349,16 @@ sub _add_coins {
 	my @lines = <DB>;
 	close DB;
 
+	my $coins = prompt "How much did you pay?\nmatomat> ", -integer;
+	
 	open DB, ">", $dbfile or die $!;
 	foreach my $line (@lines) {
 		chomp($line);
 		if ($line =~ m/^$user/) {
 			my ($login, $credit, $beertmp, $matetmp, $tschunktmp) = split(/:/, $line, 5);
-			my $coins = prompt "How much did you pay?\nmatomat> ", -integer;
+			# Da war wohl ein Bier schlecht wie ich das geschrieben habe ...
+			#my $coins = prompt "How much did you pay?\nmatomat> ", -integer;
+			$coins=$coins*100;
 			$credit=$credit+$coins;
 			print "Hi $login ... your new stats are\n\n";
 			print "Credit: $credit\n";
@@ -362,7 +387,7 @@ sub _loscher_menu {
 			my ($name, $pass, $flag) = split(/:/, $_, 3);
 			if ($flag == "1") {
 				print "Hi Master aka $name ...\n\n";
-				my $choice = prompt 'Add User or Back to Main ...', -number, -timeout=>20, -default=>'Main Menu', -menu => [
+				my $choice = prompt 'Add User or Back to Main ...', -number, -timeout=>$timeout, -default=>'Main Menu', -menu => [
 					'Add User', "Change Password",
 					'Main Menu'], 'matomat>';
 				if ($choice eq "Add User") {
@@ -388,6 +413,7 @@ sub _add_user {
 	my $apass = prompt 'Enter Password:', -echo=>'*';
 	my $hashpass = sha512_base64($apass);
 	my $startcredit = prompt 'Start credits:', -i;
+	$startcredit=$startcredit*100;
 	my $aflag;
 
 	if ( prompt "Is this a Admin User?", -YN ) {
@@ -486,6 +512,43 @@ sub _change_pass {
 	close CRED;
 }
 
+sub _current_rate {
+
+	if ($rtrate == 0) {
+		my $rate = 1;
+		$rate = sprintf("%.2f", $rate);
+		return $rate;
+	}
+
+	open DB, "<", $dbfile or die $!;
+	my @lines = <DB>;
+	close DB;
+
+	my $users = -1;
+	my $cash = 0;
+	my $cashrate = 0;
+	my $rate;
+	
+	foreach my $line (@lines) {
+		chomp($line);
+		my ($login, $credit, $beer, $mate, $tschunk) = split(/:/, $line, 5);
+		$users++;
+		$cash=$cash+$credit;
+		$cashrate=$cash/100;
+	}
+	#if ($cashrate >= 15) {
+		$cashrate=$cashrate/$users*2;
+	#} else {
+	#	$cashrate=$cashrate/$user*2;
+	#}
+	$cashrate = sprintf("%.0f", $cashrate);
+	$rate = 100-$cashrate;
+	$rate = $rate/100;
+	$rate = sprintf("%.2f", $rate);
+
+	return $rate;
+}
+
 sub _quit_t2s {
 	my @stuff = ('so long sucker',
 		'so long and. thanks for all the fish',
@@ -561,7 +624,6 @@ EOF
 sub _login_banner {
 	print $clear_string;
 	print STDOUT << "EOF";
-
                                     =?I777777II?????II777777?=
                                7777?                           I777?
                           I77I     I77               =777777777+     I77=
@@ -603,7 +665,6 @@ sub _login_banner {
                             +77I                                  =777=
                                   7777I+                   ?7777+
                                           ++?IIII7III??+=
-
 EOF
 }
 
