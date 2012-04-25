@@ -20,10 +20,11 @@ Perl modules:
 - Digest::SHA
 - IO::Prompter (Version: 0.002000)
 - Term::ReadKey
+- Module::Load
 
 Install missing modules doing the following
 
-# sudo perl -MCPAN -e "install <MODULE_NAME>"
+> sudo perl -MCPAN -e "install <MODULE_NAME>"
 
 
 
@@ -34,9 +35,10 @@ Create the matomat.db in /var/matomat/
 
 Default user is admin with password matomat.
 
-# sqlite3 /var/matomat/matomat.db "CREATE TABLE user (userid INTEGER PRIMARY KEY, username TEXT UNIQUE, pw_hash TEXT, privs INT, credits INT);"
-# sqlite3 /var/matomat/matomat.db "INSERT INTO user  (username, pw_hash, privs, credits) VALUES ('admin','r3TXgPlPRhedOewwnL/AWI3g79hG7ME6B6g05Hl3+DddJs82bhonu6xscTXeJoPRnR2HlJVsZcoNx86sX4kalw',1,1000);"
-# sqlite3 /var/matomat/matomat.db "CREATE TABLE drinks (drinkid INTEGER PRIMARY KEY, name TEXT UNIQUE, price INT, active INT,fixed INT,t2s TEXT);"
+> sqlite3 /var/matomat/matomat.db "CREATE TABLE user (userid INTEGER PRIMARY KEY, username TEXT UNIQUE, pw_hash TEXT, privs INT, credits INT);"
+> sqlite3 /var/matomat/matomat.db "INSERT INTO user  (username, pw_hash, privs, credits) VALUES ('admin','r3TXgPlPRhedOewwnL/AWI3g79hG7ME6B6g05Hl3+DddJs82bhonu6xscTXeJoPRnR2HlJVsZcoNx86sX4kalw',1,1000);"
+> sqlite3 /var/matomat/matomat.db "CREATE TABLE drinks (drinkid INTEGER PRIMARY KEY, name TEXT UNIQUE, price INT, active INT,fixed INT,t2s TEXT);"
+> sqlite3 /var/matomat/matomat.db "CREATE TABLE plugins (name TXT UNIQUE, filename TXT UNIQUE, active INT);"
 
 Login with the admin user, change the password, add some drink and users.
 

@@ -34,6 +34,7 @@ else
 	sqlite3 $DATA_DIR/matomat/matomat.db "CREATE TABLE user (userid INTEGER PRIMARY KEY, username TEXT UNIQUE, pw_hash TEXT, privs INT, credits INT);"
 	sqlite3 $DATA_DIR/matomat/matomat.db "INSERT INTO user  (username, pw_hash, privs, credits) VALUES ('admin','r3TXgPlPRhedOewwnL/AWI3g79hG7ME6B6g05Hl3+DddJs82bhonu6xscTXeJoPRnR2HlJVsZcoNx86sX4kalw',1,1000);"
 	sqlite3 $DATA_DIR/matomat/matomat.db "CREATE TABLE drinks (drinkid INTEGER PRIMARY KEY, name TEXT UNIQUE, price INT, active INT,fixed INT,t2s TEXT);"
+	sqlite3 $DATE_DIR/matomat/matomat.db "CREATE TABLE plugins (name TXT UNIQUE, filename TXT UNIQUE, active INT);"
 	chmod 666 $DATA_DIR/matomat/matomat.db
 	chmod 777 $DATA_DIR/matomat/
 	echo "[+] Matomat.db created."

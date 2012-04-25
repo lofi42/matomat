@@ -8,6 +8,7 @@ use Text::FIGlet;
 use Digest::SHA qw(sha512 sha512_base64 sha512_hex);
 use Term::ReadKey;
 use Config::Simple;
+use Module::Load;
 
 $ENV{'PATH'} = '/bin:/usr/bin';
 
@@ -23,6 +24,7 @@ my $echobin = $cfg->param('global.echo');
 my $festivalbin = $cfg->param('global.festival');
 my $clear_string = $cfg->param('global.clear');
 my $dbfile = $cfg->param('global.database');
+my $pluginpath = $cfg->param('global.pluginpath');
 my $font = Text::FIGlet->new(-m=>-1,-f=>$cfg->param('global.font'));
 my $timeout = $cfg->param('global.timeout');
 my $rtrate = $cfg->param('global.realtime');
@@ -92,6 +94,11 @@ sub _main {
 		&_banner;
 		my @param = ($user, $selec);
 		&_use_drink(@param);
+		&_breake;
+	} elsif ($selec =~ m/^shoot/) {
+		&_banner;
+		my @param = ($user, $selec);
+		&_load_plugin(@param);
 		&_breake;
 	} elsif ($selec eq "insert coins") {
 		&_banner;
@@ -163,6 +170,7 @@ sub _breake {
 
 sub _main_menu {
 	my @drinks;
+	my @plugins;
 	my @default = ("insert coins", "stats", "loscher stuff", "change password");
 
         my $sth = $dbh->prepare("SELECT name FROM drinks WHERE active=1");
@@ -174,8 +182,21 @@ sub _main_menu {
 		($result) = @$row;
 		push(@drinks, "use $result");
         }
+
+	my $sth = $dbh->prepare("SELECT name FROM plugins WHERE active=1");
+        $sth->execute();
+        my $out = $sth->fetchall_arrayref;
+
+        my $result;
+        foreach my $row (@$out) {
+                ($result) = @$row;
+                push(@plugins, "shoot $result");
+        }
+
+
 	my $selec = prompt 'Choose wisely...', -number, -timeout=>$timeout, -default=>'Quit', -menu => [
                 @drinks,
+		@plugins,
 		@default,
                 'Quit'], 'matomat>';
 }
@@ -417,7 +438,7 @@ sub _loscher_menu {
 	if ($result == "1") {
 		print "Hi Master aka $user ...\n\n";
 		my $choice = prompt 'Add User or Back to Main ...', -number, -timeout=>$timeout, -default=>'Main Menu', -menu => [
-                                        'Add User', 'Change Password', 'Show User', 'Add Drink', 'Edit Drink','Delete Drink',
+                                        'Add User', 'Change Password', 'Show User', 'Add Drink', 'Edit Drink','Delete Drink', 'Plugins',
                                         'Main Menu'], 'matomat>';
 
 			if ($choice eq "Add User") {
@@ -431,6 +452,8 @@ sub _loscher_menu {
                                 &_edit_drink;
                         } elsif ($choice eq "Delete Drink") {
                                 &_delete_drink
+			} elsif ($choice eq "Plugins") {
+				&_plugins
 	                } elsif ($choice eq "Change Password") {
         	                my $username = prompt "Change password of user: ";
 				&_bad_input($username);
@@ -708,6 +731,106 @@ sub _delete_drink {
 			&_loscher_menu;
 		}
         }
+}
+
+sub _plugins {
+	my @plugins;
+	my $aflag;
+        my $sth = $dbh->prepare("SELECT name FROM plugins");
+        $sth->execute();
+        my $out = $sth->fetchall_arrayref;
+
+        my $result;
+        foreach my $row (@$out) {
+                ($result) = @$row;
+                push(@plugins, "disable or enable $result");
+        }
+
+	my $selec = prompt "Plugins...", -number, -timeout=>$timeout, -default=>'Go To Main Menu', -menu => [
+		'Import Plugin',
+		@plugins,
+		'Go To Main Menu',
+		'Quit'], 'matomat>';
+
+        if ($selec eq "Go To Main Menu") {
+                &_main;
+        } elsif ($selec eq "Quit") {
+                print "Bye Bye ...\n";
+                &_t2s(@t2s_quit);
+                &_login;
+        } elsif ($selec eq "Import Plugin") {
+		# XXX FIX!!!
+		my $files = `ls $pluginpath`;
+		my $selec = prompt "Select the Plugin...", -number, -timeout=>$timeout, -default=>'Go To Main Menu', -menu=>$files => [
+			'Go To Main Menu',
+                	'Quit'], 'matomat>';
+
+		if ($selec eq "Go To Main Menu") {
+			&_main;
+		} elsif ($selec eq "Quit") {
+			print "Bye Bye ...\n";
+			&_t2s(@t2s_quit);
+			&_login;
+		} else {
+	        	my $pluginname = prompt "Name of the Plugin: ";
+        		&_bad_input($pluginname);
+
+			my $sth = $dbh->prepare("INSERT OR IGNORE INTO plugins (name, filename, active) VALUES (?,?,0)");
+	        	$sth->execute($pluginname, $pluginpath.$selec);
+
+			print $selec."\n";
+		}
+	} else {
+		my $name;
+		my $filename;
+		my $active;
+		$selec=~s/disable or enable //;
+
+		print "\n$selec Setting ...\n";
+		my $sth = $dbh->prepare("SELECT name,filename,active FROM plugins WHERE name=?");
+		$sth->execute($selec);
+		my $out = $sth->fetchall_arrayref;
+
+		my $result;
+		foreach my $row (@$out) {
+			($name, $filename, $active) = @$row;
+		}
+		print "Name: $name\nFilename: $filename\nActive: $active\n\n";
+		if ($active == 0) {
+			if ( prompt "Do you want to activate this plugin?", -YN) {
+				$aflag = "1";
+			} else {
+				$aflag = "0";
+			}
+		} elsif ($active == 1) {
+			if ( prompt "Do you want to deactivate this plugin?", -YN) {
+                                $aflag = "0";
+                        } else {
+                                $aflag = "1";
+                        }
+		}
+	        my $sth = $dbh->prepare("UPDATE plugins set active='$aflag' WHERE name=?");
+       		$sth->execute($selec);
+	}
+}
+
+sub _load_plugin {
+        my $user = $_[0];
+        &_bad_input($user);
+        my $plugin = $_[1];
+        $plugin=~s/shoot //;
+	my $filename;
+
+	my $sth = $dbh->prepare("SELECT filename FROM plugins WHERE name=?");
+	$sth->execute($plugin);
+	my $out = $sth->fetchall_arrayref;
+
+	my $result;
+        foreach my $row (@$out) {
+	        ($filename) = @$row;
+        }
+
+	load $filename;
 }
 
 sub _current_rate {

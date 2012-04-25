@@ -6,6 +6,11 @@ C = Change
 B = Bugfix
 
 ---------------------------------
+matomat version 0.2.1 (25-04-2012)
+
+* F: It is now possible to write plugins
+
+---------------------------------
 matomat version 0.2.0 (25-04-2012)
 
 * C: Sqlite database instead of this flat file stuff
