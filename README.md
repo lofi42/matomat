@@ -33,6 +33,8 @@ INSTALL:
 
 Create the matomat.db in /var/matomat/
 
+You can simple use the install.sh to create the DB and place the files.
+
 Default user is admin with password matomat.
 
 > sqlite3 /var/matomat/matomat.db "CREATE TABLE user (userid INTEGER PRIMARY KEY, username TEXT UNIQUE, pw_hash TEXT, privs INT, credits INT);"
