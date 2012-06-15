@@ -9,6 +9,7 @@
 CFG_DIR=/etc/
 DATA_DIR=/var/
 BIN_DIR=/usr/local/bin/
+LIB_DIR=/usr/lib/perl5/site_perl
 
 if [ "$(id -u)" != "0" ]; then
    echo "This script must be run as root" 1>&2
@@ -20,6 +21,13 @@ if [ -f "$CFG_DIR/matomat.cfg" ]
 else
 	cp matomat.cfg $CFG_DIR/matomat.cfg
 	echo "[+] Config file created."
+fi
+
+if [ -d "$LIB_DIR/Matomat" ]
+	then echo "[-] Matomat Perl Module Directory already exists."
+else
+	cp -r Matomat $LIB_DIR
+	echo "[+] Matomat Perl Modules created."
 fi
 
 if [ -d "$DATA_DIR/matomat" ]
