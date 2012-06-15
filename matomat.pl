@@ -2,7 +2,6 @@
 ##############################################################
 
 use strict;
-#use DBI;
 use IO::Prompter;
 use Text::FIGlet;
 use Digest::SHA qw(sha512 sha512_base64 sha512_hex);
@@ -17,13 +16,6 @@ use Matomat::Banner;
 use Matomat::DBConnect;
 
 $ENV{'PATH'} = '/bin:/usr/bin';
-
-#my $dbargs = {AutoCommit => 1, PrintError => 1, foreign_keys => 1};
-#my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", $dbargs);
-#$dbh->do("PRAGMA foreign_keys = ON");
-
-#if ($dbh->err()) { die "[NO_MATE] DB Error $DBI::errstr\n"; }
-#$dbh->commit();
 
 &_login;
 
