@@ -2,7 +2,7 @@
 
 ####################################################
 #
-# Install Script for matomat Version 0.2.0
+# Install Script for matomat Version 0.2.2 
 #
 ####################################################
 
@@ -31,8 +31,8 @@ else
 	cp standard.flf $DATA_DIR/matomat/standard.flf
 	echo "[+] Data Directory created."
 
-	sqlite3 $DATA_DIR/matomat/matomat.db "CREATE TABLE user (userid INTEGER PRIMARY KEY, username TEXT UNIQUE, pw_hash TEXT, privs INT, credits INT);"
-	sqlite3 $DATA_DIR/matomat/matomat.db "INSERT INTO user  (username, pw_hash, privs, credits) VALUES ('admin','r3TXgPlPRhedOewwnL/AWI3g79hG7ME6B6g05Hl3+DddJs82bhonu6xscTXeJoPRnR2HlJVsZcoNx86sX4kalw',1,1000);"
+	sqlite3 $DATA_DIR/matomat/matomat.db "CREATE TABLE user (userid INTEGER PRIMARY KEY, username TEXT UNIQUE, pw_hash TEXT, pw_change INT, rfid_id INT UNIQUE, privs INT, credits INT);"
+	sqlite3 $DATA_DIR/matomat/matomat.db "INSERT INTO user  (username, pw_hash, pw_change, rfid_id, privs, credits) VALUES ('admin','$xlx37Vm8heXo192iixKl89vB6ZkFygnWBctLHy4vlSjXoAkfo4SDsGefEvocbjhBHmJdRVJXj53aoqZpjfq1ESq0IsXGimKveaXZu2ak9PzYVC6Iawz3wP8xnqnAYC1Uz$WLHrV6B/9Cpa0jrfEv1wtLz4AoifIWEXlcFeOHNnbmLW8K/qUhF//odu9T44RwZ7zeJSeuDA2CPwSZ12phcu5g',0,1000,1,0);"
 	sqlite3 $DATA_DIR/matomat/matomat.db "CREATE TABLE drinks (drinkid INTEGER PRIMARY KEY, name TEXT UNIQUE, price INT, active INT,fixed INT,t2s TEXT);"
 	sqlite3 $DATE_DIR/matomat/matomat.db "CREATE TABLE plugins (name TXT UNIQUE, filename TXT UNIQUE, active INT);"
 	chmod 666 $DATA_DIR/matomat/matomat.db
