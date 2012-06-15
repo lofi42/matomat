@@ -10,24 +10,12 @@ use Term::ReadKey;
 use Config::Simple;
 use Module::Load;
 
-$ENV{'PATH'} = '/bin:/usr/bin';
+# Matomat Modules
+use Matomat::Config;
+use Matomat::T2S;
+use Matomat::Banner;
 
-my $cfg = new Config::Simple('/etc/matomat.cfg') or die "[NO_MATE] Config File not found\n";
-my @t2s_badlogin = $cfg->param('t2s.badlogin');
-my @t2s_pay_minus5 = $cfg->param('t2s.pay_minus5');
-my @t2s_pay_minus10 = $cfg->param('t2s.pay_minus10');
-my @t2s_pay_minus15 = $cfg->param('t2s.pay_minus15');
-my @t2s_quit = $cfg->param('t2s.quit');
-my @t2s_stats = $cfg->param('t2s.stats');
-my @t2s_credits = $cfg->param('t2s.credits');
-my $echobin = $cfg->param('global.echo');
-my $festivalbin = $cfg->param('global.festival');
-my $clear_string = $cfg->param('global.clear');
-my $dbfile = $cfg->param('global.database');
-my $pluginpath = $cfg->param('global.pluginpath');
-my $font = Text::FIGlet->new(-m=>-1,-f=>$cfg->param('global.font'));
-my $timeout = $cfg->param('global.timeout');
-my $rtrate = $cfg->param('global.realtime');
+$ENV{'PATH'} = '/bin:/usr/bin';
 
 my $dbargs = {AutoCommit => 1, PrintError => 1, foreign_keys => 1};
 my $dbh = DBI->connect("dbi:SQLite:dbname=$dbfile", "", "", $dbargs);
@@ -48,9 +36,7 @@ sub _login {
 
 	my $user = $pwent[0];
 	my $password = $pwent[1];
-
-	my $pw_hash;
-	my $pass = sha512_base64($password);
+	my $pass;
 
 	my $sth = $dbh->prepare("SELECT pw_hash FROM user WHERE username=?");
 	$sth->execute($user);
@@ -60,14 +46,50 @@ sub _login {
 		($out) = @$row;
 	}
 
-	if ($out eq $pass) {
-		&_hello($user);
-		@pwent = ($user, $pass);
-		&_main(@pwent);
-		return;
+	# Migration Stuff
+	# XXX FIX XXX
+	if ($out =~ m/^\$/) {
+		my @storedhash = split(/\$/, $out);
+		my $storedsalt = @storedhash[1];
+		my $storedpass = @storedhash[2];
+		my @saltpass = &_hash_password($storedsalt,$password);
+		my $pass = $saltpass[1];
+		if ($storedpass eq $pass) {
+			&_hello($user);
+			@pwent = ($user, $pass);
+			&_main(@pwent);
+			return;
+		} else {
+			&_wrong_pass;
+		}
 	} else {
-		&_wrong_pass;
-	}
+		my $noSalthash = sha512_base64($password);
+
+		if ($out eq $noSalthash) {
+			my $salt = &_genSalt(128);
+			my @salthash = &_hash_password($salt, $password);
+			my $pass = '$'.@salthash[0].'$'.$salthash[1];
+
+		        my $sth = $dbh->prepare("UPDATE user set pw_hash='$pass' WHERE username=?");
+		        $sth->execute($user);
+
+	                &_hello($user);
+       		        @pwent = ($user, $pass);
+                	&_main(@pwent);
+                	return;
+        	} else {
+                	&_wrong_pass;
+        	}
+	} 
+
+	#if ($out eq $pass) {
+	#	&_hello($user);
+	#	@pwent = ($user, $pass);
+	#	&_main(@pwent);
+	#	return;
+	#} else {
+	#	&_wrong_pass;
+	#}
 }
 
 sub _hello {
@@ -477,12 +499,21 @@ sub _add_user {
 	&_bad_input($startcredit);
 	$startcredit=$startcredit*100;
 	my $aflag;
+	my $changepass;
 
 	if ( prompt "Is this a Admin User?", -YN ) {
 		$aflag = "1";
 	} else {
 		$aflag = "0";
 	}
+	
+        if ( prompt "Force Password change?", -YN ) {
+                $changepass = "1";
+        } else {
+                $changepass = "0";
+        }
+
+	my $rfid_id = prompt 'Enter RFID ID:', -i;
 
         # Get usernames
         my $sth = $dbh->prepare("SELECT username FROM user");
@@ -499,14 +530,16 @@ sub _add_user {
         }
 
         # Add new user
-        my $sth = $dbh->prepare("INSERT into user (username, pw_hash, privs, credits) values(?,?,?,?)");
-        $sth->execute($auser, $hashpass, $aflag, $startcredit);
+        my $sth = $dbh->prepare("INSERT into user (username, pw_hash, pw_change, rfid_id, privs, credits) values(?,?,?,?,?,?)");
+        $sth->execute($auser, $hashpass, $changepass, $rfid_id, $aflag, $startcredit);
 
 	$auser = "";
 	$apass = "";
 	$hashpass = "";
 	$startcredit = "";
 	$aflag = "";
+	$changepass = "";
+	$rfid_id = "";
 }
 
 sub _change_pass {
@@ -519,17 +552,22 @@ sub _change_pass {
 
 	if ($admin eq "0") {
 		$apass = prompt 'Enter current password:', -echo=>'*';
-		$hashpass = sha512_base64($apass);
 
 	        my $sth = $dbh->prepare("SELECT pw_hash FROM user WHERE username=?");
 	        $sth->execute($user);
         	my $out = $sth->fetchall_arrayref;
 
-        	foreach my $row (@$out) {
-                	($out) = @$row;
-        	}
+                foreach my $row (@$out) {
+                        ($out) = @$row;
+                }
 
-        	if ($out ne $hashpass) {
+                my @storedhash = split(/\$/, $out);
+                my $storedsalt = @storedhash[1];
+                my $storedpass = @storedhash[2];
+                my @saltpass = &_hash_password($storedsalt,$apass);
+                my $pass = $saltpass[1];
+
+        	if ($storedpass ne $pass) {
 			print "\n[NO_MATE] Your current password is not correct\n\n";
 			sleep 3;
                         &_change_pass($user, $admin);
@@ -543,9 +581,12 @@ sub _change_pass {
 		sleep 3;
 		&_change_pass($user, $admin);
 	}
-	my $newhash = sha512_base64($npass);
 
-        my $sth = $dbh->prepare("UPDATE user set pw_hash='$newhash' WHERE username=?");
+        my $salt = &_genSalt(128);
+        my @salthash = &_hash_password($salt, $npass);
+        my $pass = '$'.@salthash[0].'$'.$salthash[1];
+
+        my $sth = $dbh->prepare("UPDATE user set pw_hash='$pass' WHERE username=?");
         $sth->execute($user);
 
         if ($sth) {
@@ -831,6 +872,7 @@ sub _load_plugin {
         }
 
 	load $filename;
+	delete $INC{"$filename"};
 }
 
 sub _current_rate {
@@ -869,13 +911,6 @@ sub _current_rate {
 	return $rate;
 }
 
-sub _t2s {
-	my @text = @_;
-	my $arrCnt = scalar(@text);
-	my $rand = rand($arrCnt);
-	system("$echobin $text[$rand] | $festivalbin --tts");
-}
-
 sub _bad_input {
 	my $string = $_[0];
 	chomp($string);
@@ -890,79 +925,29 @@ sub _bad_input {
 		
 }
 
-sub _banner {
-	print `$clear_string`;
-	print STDOUT << "EOF";
-============================================================================
- __    __     ______     ______   ______     __    __     ______     ______
-/\\ "-./  \\   /\\  __ \\   /\\__  _\\ /\\  __ \\   /\\ "-./  \\   /\\  __ \\   /\\__  _\\
-\\ \\ \\-./\\ \\  \\ \\  __ \\  \\/_/\\ \\/ \\ \\ \\/\\ \\  \\ \\ \\-./\\ \\  \\ \\  __ \\  \\/_/\\ \\/
- \\ \\_\\ \\ \\_\\  \\ \\_\\ \\_\\    \\ \\_\\  \\ \\_____\\  \\ \\_\\ \\ \\_\\  \\ \\_\\ \\_\\    \\ \\_\\
-  \\/_/  \\/_/   \\/_/\\/_/     \\/_/   \\/_____/   \\/_/  \\/_/   \\/_/\\/_/     \\/_/
+sub _hash_password {
+	my @arg = @_;
+	my $salt = @arg[0];
+	my $password = @arg[1];
+	my $string = $salt.$password;	
+	my $hash = sha512_base64($string);
+	my $i = 0;
 
-============================================================================
-
-EOF
+	# Over 9000
+	while ($i < 9001) {
+		$hash = sha512_base64($hash);
+		$i++;
+	}
+	return($salt, $hash);
 }
 
-sub _login_banner {
-	print `$clear_string`;
-	print STDOUT << "EOF";
-                                    =?I777777II?????II777777?=
-                               7777?                           I777?
-                          I77I     I77               =777777777+     I77=
-                      =77I    ?777777=                I7777777777777+   =77+
-                   =77=   I7777777777                  77777777777777777+   77?
-                 ?77   I7777777777777                  =7777777777777777777   ?77
-               77=  I777777777777777?                   7777777777777777777777   77=
-             ?7I  ?77777777777777777                     77777777777777777777777   77
-           +77  77777777777777777777                     7777777777777777777777777   77
-          77   777777777777777777777                      77777777777777777777777777  +7=
-         77  77777777777777777777777                      777777777777777777777777777+  77
-       I7   777777777777777777777777                          +7777777777777I+= +777777  77
-      =7   77777777777777777777?=                   +?77777777777?             ?77777777  77
-      7   7777777777=          =7777777777777777777777777=                  7777777777777  7I
-     77  77777+                      ==+????++=                         I7777777777777777?  7
-    I7  77777777I+                    ?77    ?777?+?7777+       +I777777777777777777777777  77
-    7I  77777777777777777777777777    7777   777777777777  = 777777777777777777777777777777  7
-    7  77777777777777777777777777+      ?  7 I=777777777 777 =77777777777777777777777777777  77
-   77  77777777777777777777777777=777        =+==   I7777 7+ 777777777777777777777777777777  +7
-   77  77777777777777777777777777 I? 77         77777=7777777777777777777777777777777777777?  7
-   77  77777777777777777777777777777777=   777777777+?77777777777777I7777777777II7777777777I  7
-   77  77777777777777777777777777    I       777777 ?777777777777777+7777777777 77777777777+ =7
-   ?7  77777777777777777777777?                 77+ 7777777777777777=7777+7777+777777777777  I7
-    7  ?777777777777777777I                     +7   =77777777777777+7777 7777 777777777777  7?
-    77  777777777777777                                 77777777777+77777 77 I=77777777777+  7
-     7  +777777777777                                     777777777 777=77+77I777777777777  7I
-     77  I777777777                                        +7777=77=777?=777 777777777777  I7
-      77  7777777                                            7 777=?777777? I77777777777=  7
-       77  I777                                              77777777777    77777777777   7
-        77  ?                                              ?777777777777I  77777777777   7
-         ?7                                               777777777777777I77777777777  77
-           77                                             777777777777I==I777777777=  7I
-            +7+                                           77777      ?77777777777+  77
-              +7+                                         777         ?77777777   77
-                77=                                       77           +77777   77=
-                   77                                                    7   I7?
-                     77I                                                   77
-                        +77?                                           77I
-                            +77I                                  =777=
-                                  7777I+                   ?7777+
-                                          ++?IIII7III??+=
-EOF
+sub _genSalt
+{
+    my $saltsize = shift;
+    my @char = ('a'..'z', 'A'..'Z', 0..9);
+    my $randsalt = join '',
+           map $char[rand @char], 0..$saltsize;
+
+    return $randsalt;
 }
 
-sub _loscher_banner {
-	print `$clear_string`;
-	print STDOUT << "EOF";
-============================================================================
- __         ______     ______     ______     __  __     ______     ______
-/\\ \\       /\\  __ \\   /\\  ___\\   /\\  ___\\   /\\ \\_\\ \\   /\\  ___\\   /\\  == \\
-\\ \\ \\____  \\ \\ \\/\\ \\  \\ \\___  \\  \\ \\ \\____  \\ \\  __ \\  \\ \\  __\\   \\ \\  __<
- \\ \\_____\\  \\ \\_____\\  \\/\\_____\\  \\ \\_____\\  \\ \\_\\ \\_\\  \\ \\_____\\  \\ \\_\\ \\_\\
-  \\/_____/   \\/_____/   \\/_____/   \\/_____/   \\/_/\\/_/   \\/_____/   \\/_/ /_/
-
-============================================================================
-
-EOF
-}
