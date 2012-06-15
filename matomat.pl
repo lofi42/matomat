@@ -155,7 +155,7 @@ sub _quit {
 }
 
 sub _loscher_breake {
-        my $breake = prompt 'Losche Menu Mainn Menu or Quit ...', -number, -timeout=>$timeout, -default=>'Loscher Menu', -menu => [
+        my $breake = prompt 'Losche Menu Main Menu or Quit ...', -number, -timeout=>$timeout, -default=>'Loscher Menu', -menu => [
 		'Loscher Menu',
                 'Main Menu',
                 'Quit'], 'matomat>';

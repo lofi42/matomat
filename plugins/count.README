@@ -1,0 +1,42 @@
+DESCRIPTION:
+============
+
+Simple Count Plugin with send stats mail function.
+
+REQUIREMENTS:
+=============
+
+Perl Module:
+- Net::SMTP
+
+Install missing modules doing the following
+
+sudo perl -MCPAN -e "install MODULE_NAME"
+
+INSTALL:
+========
+
+1. Create a new table for the Plugin.
+
+sqlite3 /var/matomat/matomat.db "CREATE TABLE plugin_count (date TEXT UNIQUE, count INT, sent INT);"
+
+2. Copy the count.pm file to your plugin directory.
+
+3. Add the Plugin in the loscher menue and activate it.
+
+4. Add the following to the matomat.cfg
+
+[plugin_count]
+to="recipient@domain.bla"
+from="matomat@domain.bla"
+cc="cc@domain.bla"
+smtphost="yourfancymailserver.domain.bla"
+
+
+AUTHORS:
+========
+
+Nikolas Sotiriu (lofi)
+lofi@sotiriu.de
+http://sotiriu.de
+
