@@ -42,7 +42,7 @@ else
 	sqlite3 $DATA_DIR/matomat/matomat.db "CREATE TABLE user (userid INTEGER PRIMARY KEY, username TEXT UNIQUE, pw_hash TEXT, pw_change INT, rfid_id INT UNIQUE, privs INT, credits INT);"
 	sqlite3 $DATA_DIR/matomat/matomat.db "INSERT INTO user  (username, pw_hash, pw_change, rfid_id, privs, credits) VALUES ('admin','$xlx37Vm8heXo192iixKl89vB6ZkFygnWBctLHy4vlSjXoAkfo4SDsGefEvocbjhBHmJdRVJXj53aoqZpjfq1ESq0IsXGimKveaXZu2ak9PzYVC6Iawz3wP8xnqnAYC1Uz$WLHrV6B/9Cpa0jrfEv1wtLz4AoifIWEXlcFeOHNnbmLW8K/qUhF//odu9T44RwZ7zeJSeuDA2CPwSZ12phcu5g',0,1000,1,0);"
 	sqlite3 $DATA_DIR/matomat/matomat.db "CREATE TABLE drinks (drinkid INTEGER PRIMARY KEY, name TEXT UNIQUE, price INT, active INT,fixed INT,t2s TEXT);"
-	sqlite3 $DATE_DIR/matomat/matomat.db "CREATE TABLE plugins (name TXT UNIQUE, filename TXT UNIQUE, active INT);"
+	sqlite3 $DATA_DIR/matomat/matomat.db "CREATE TABLE plugins (name TXT UNIQUE, filename TXT UNIQUE, active INT);"
 	chmod 666 $DATA_DIR/matomat/matomat.db
 	chmod 777 $DATA_DIR/matomat/
 	echo "[+] Matomat.db created."
